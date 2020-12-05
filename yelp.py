@@ -76,7 +76,8 @@ def database(location,offset=0):
         conn.commit()
 
 def main (): 
-    database("Ann Arbor")
+    city=input("Enter search criteria ex)city")
+    database(city)
 
 
 if __name__ == "__main__":
