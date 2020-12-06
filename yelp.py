@@ -38,7 +38,10 @@ def get_business_data (location,offset=0):
     #if the price is not indicated, it should say "none" 
     businesses_dict={}
     for business in businesses_info['businesses']:
-        businesses_dict[business['name']] = [business['rating'],business['review_count']]
+        try: 
+            businesses_dict[business['name']] = [business['rating'],business['review_count'],len(business['price'])]
+        except:
+            businesses_dict[business['name']] = [business['rating'],business['review_count'],0]
     return (businesses_dict)
 
 # set up the database
@@ -57,7 +60,7 @@ def database(location,offset=0):
     cur.execute("CREATE TABLE restaurants_names (id INTEGER PRIMARY KEY,name TEXT)")
 
     cur.execute("DROP TABLE IF EXISTS yelp_restaurants_info")
-    cur.execute("CREATE TABLE yelp_restaurants_info (restaurant_id INTEGER PRIMARY KEY,rating FLOAT,review_count INTEGER)")
+    cur.execute("CREATE TABLE yelp_restaurants_info (restaurant_id INTEGER PRIMARY KEY,rating FLOAT,review_count INTEGER,price_range INTEGER)")
 
     # insert values to the table
     num_restaurants=0
@@ -70,7 +73,7 @@ def database(location,offset=0):
             #for table "yelp_restaurants_info"
             cur.execute("SELECT restaurants_names.id FROM restaurants_names WHERE name=?",(restaurant[0], ))
             restaurant_id=cur.fetchone()
-            cur.execute("INSERT OR IGNORE INTO yelp_restaurants_info (restaurant_id,rating,review_count) VALUES (?,?,?)",(restaurant_id[0],restaurant[1][0],restaurant[1][1]))
+            cur.execute("INSERT OR IGNORE INTO yelp_restaurants_info (restaurant_id,rating,review_count,price_range) VALUES (?,?,?,?)",(restaurant_id[0],restaurant[1][0],restaurant[1][1],restaurant[1][2]))
             counts+=1
         num_restaurants+=25
         conn.commit()
