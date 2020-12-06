@@ -57,14 +57,14 @@ def database(location,offset=0):
     cur, conn = setUpDatabase('restaurants.db') 
 
     cur.execute("DROP TABLE IF EXISTS restaurants_names")
-    cur.execute("CREATE TABLE restaurants_names (id INTEGER PRIMARY KEY,name TEXT)")
+    cur.execute("CREATE TABLE restaurants_names (id INTEGER PRIMARY KEY,name TEXT NOT NULL UNIQUE)")
 
     cur.execute("DROP TABLE IF EXISTS yelp_restaurants_info")
     cur.execute("CREATE TABLE yelp_restaurants_info (restaurant_id INTEGER PRIMARY KEY,rating FLOAT,review_count INTEGER,price_range INTEGER)")
 
     # insert values to the table
     num_restaurants=0
-    for n in range(4):
+    for n in range(5):
         dictionary=get_business_data(location,num_restaurants)
         counts=num_restaurants+1
         for restaurant in dictionary.items():
@@ -73,13 +73,13 @@ def database(location,offset=0):
             #for table "yelp_restaurants_info"
             cur.execute("SELECT restaurants_names.id FROM restaurants_names WHERE name=?",(restaurant[0], ))
             restaurant_id=cur.fetchone()
-            cur.execute("INSERT OR IGNORE INTO yelp_restaurants_info (restaurant_id,rating,review_count,price_range) VALUES (?,?,?,?)",(restaurant_id[0],restaurant[1][0],restaurant[1][1],restaurant[1][2]))
-            counts+=1
+            cur.execute("INSERT OR IGNORE INTO yelp_restaurants_info (restaurant_id,rating,review_count,price_range) VALUES (?,?,?,?) ",(restaurant_id[0],restaurant[1][0],restaurant[1][1],restaurant[1][2]))
+            counts+=1  
         num_restaurants+=25
         conn.commit()
 
 def main (): 
-    city=input("Enter search criteria ex)city")
+    city=input("Enter search criteria ex)city ")
     database(city)
 
 
