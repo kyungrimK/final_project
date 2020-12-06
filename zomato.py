@@ -5,7 +5,7 @@ import os
 
 restaurants_name=[]
 rating_reviews=[]
-api_key = "d6c597785fed953a02eba404f366d0bf"
+api_key = "api_key"
 
 def setUpData(db_name):
     path = os.path.dirname(os.path.abspath(__file__))
