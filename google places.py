@@ -76,7 +76,6 @@ def database():
             cur.execute("INSERT OR IGNORE INTO google_restaurants_info (restaurant_id,price,rating) VALUES (?,?,?)",(restaurant_id[0],restaurant[1][0],restaurant[1][1])) 
         conn.commit()
     
-
 def main (): 
     database()
 
