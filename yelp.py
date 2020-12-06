@@ -19,7 +19,7 @@ import json
 #######################################################
 
 def get_business_data (location,offset=0):
-    API_KEY= "e4mT1N4ZT1VWSQ7-XdwuW1K6bNOA4wo2hZtNAweEOSqnLR0X9YEPCQoM7RWi3eIR4WHpI1mWuHQ30Wc8OXl4RjGBK7DYxciUC8AYJsm1cp4RhyPiyZ14vwre0u3KX3Yx"
+    API_KEY= "api_key"
     URL="https://api.yelp.com/v3/businesses/search"
     HEADERS={'Authorization':'bearer %s' % API_KEY}
     PARAMS = {'limit':25,
