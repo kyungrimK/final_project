@@ -3,7 +3,7 @@ import sqlite3
 import os
 import json
 
-API_KEY="AIzaSyBO4cyhLKuHxsvA2byE73HI1oZzCsiLkO0"
+API_KEY="Api_key"
 
 def setUpDatabase(db_name):
     path = os.path.dirname(os.path.abspath(__file__))
