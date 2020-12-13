@@ -3,23 +3,8 @@ import sqlite3
 import os
 import json
 
-# [PART 2]: Gather the data and save it to a single database
-
-# Access and store at least 100 items in your database from each API/website (10 points) in at least one table per API/website. 
-# For at least one API you must have two tables that share a key (20 points)
-# You must not have duplicate data in your database! Do not split data from one table into two! 
-# Also, there should be only one database!
-
-# You must limit how much data you store from an API into the database each time you execute your code to 25 or fewer items (60 points). 
-# The data must be stored in a SQLite database. 
-# This means that you must run the code that stores the data multiple times to gather at least 100 items total without duplicating existing data or changing it.
-
-#######################################################
-################### Yelp Fusion API ###################
-#######################################################
-
-def get_business_data (location,offset=0):
-    API_KEY= "api_key"
+def get_business_data (location,offset):
+    API_KEY= "e4mT1N4ZT1VWSQ7-XdwuW1K6bNOA4wo2hZtNAweEOSqnLR0X9YEPCQoM7RWi3eIR4WHpI1mWuHQ30Wc8OXl4RjGBK7DYxciUC8AYJsm1cp4RhyPiyZ14vwre0u3KX3Yx"
     URL="https://api.yelp.com/v3/businesses/search"
     HEADERS={'Authorization':'bearer %s' % API_KEY}
     PARAMS = {'limit':25,
@@ -35,7 +20,7 @@ def get_business_data (location,offset=0):
     businesses_info=api_return.json()
 
     #creating dictionary, restaurant/business name as key and price for value
-    #if the price is not indicated, it should say "none" 
+    #if the price is not indicated, it should say 0 
     businesses_dict={}
     for business in businesses_info['businesses']:
         try: 
@@ -51,37 +36,43 @@ def setUpDatabase(db_name):
     cur = conn.cursor()
     return cur, conn
 
-
-def database(location,offset=0): 
-    # create database and create table
+# adds item to database
+def adding_item_database(dictionary,curr_id_num):
     cur, conn = setUpDatabase('restaurants.db') 
+    counts=curr_id_num+1
+    for restaurant in dictionary.items():
+    #for table "restaurants_names"
+        cur.execute("INSERT OR IGNORE INTO restaurants_names (id,name) VALUES (?,?)",(counts,restaurant[0]))
+    #for table "yelp_restaurants_info"
+        cur.execute("SELECT restaurants_names.id FROM restaurants_names WHERE name=?",(restaurant[0], ))
+        restaurant_id=cur.fetchone()
+        cur.execute("INSERT OR IGNORE INTO yelp_restaurants_info (restaurant_id,rating,review_count,price_range) VALUES (?,?,?,?) ",(restaurant_id[0],restaurant[1][0],restaurant[1][1],restaurant[1][2]))
+        counts+=1  
+    conn.commit()
 
-    cur.execute("DROP TABLE IF EXISTS restaurants_names")
-    cur.execute("CREATE TABLE restaurants_names (id INTEGER PRIMARY KEY,name TEXT NOT NULL UNIQUE)")
+def adding_25_items_database(location): 
+    cur, conn = setUpDatabase('restaurants.db') 
+    # If table exists, it will return 1. If not, it will return 0.
+    cur.execute("SELECT count(*) FROM sqlite_master WHERE type='table' AND name='restaurants_names'")
+    returned_num=cur.fetchone() 
+    if returned_num[0] == 1:
+        #If exists, select restaurants ids and find its length
+        cur.execute("SELECT restaurants_names.id FROM restaurants_names")
+        ids=cur.fetchall()
+        # If the length of items are greater than 0 and less than 101, add items to the existing table
+        if len(ids)>0 and len(ids)<101:
+            offset=len(ids)
+            business_dict=get_business_data(location,offset)
+            adding_item_database(business_dict,offset)
+            # If there is more than 101 items, drop table 
+        else: 
+            cur.execute("DROP TABLE IF EXISTS restaurants_names")
+            cur.execute("DROP TABLE IF EXISTS yelp_restaurants_info")
+    # If there is no existing table, create table
+    # then add items to the table
+    else: 
+        cur.execute("CREATE TABLE restaurants_names (id INTEGER PRIMARY KEY,name TEXT NOT NULL UNIQUE)")
+        cur.execute("CREATE TABLE yelp_restaurants_info (restaurant_id INTEGER PRIMARY KEY,rating FLOAT,review_count INTEGER,price_range INTEGER)")
+        business_dict=get_business_data(location,0)
+        adding_item_database(business_dict,0)
 
-    cur.execute("DROP TABLE IF EXISTS yelp_restaurants_info")
-    cur.execute("CREATE TABLE yelp_restaurants_info (restaurant_id INTEGER PRIMARY KEY,rating FLOAT,review_count INTEGER,price_range INTEGER)")
-
-    # insert values to the table
-    num_restaurants=0
-    for n in range(5):
-        dictionary=get_business_data(location,num_restaurants)
-        counts=num_restaurants+1
-        for restaurant in dictionary.items():
-            #for table "restaurants_names"
-            cur.execute("INSERT OR IGNORE INTO restaurants_names (id,name) VALUES (?,?)",(counts,restaurant[0]))
-            #for table "yelp_restaurants_info"
-            cur.execute("SELECT restaurants_names.id FROM restaurants_names WHERE name=?",(restaurant[0], ))
-            restaurant_id=cur.fetchone()
-            cur.execute("INSERT OR IGNORE INTO yelp_restaurants_info (restaurant_id,rating,review_count,price_range) VALUES (?,?,?,?) ",(restaurant_id[0],restaurant[1][0],restaurant[1][1],restaurant[1][2]))
-            counts+=1  
-        num_restaurants+=25
-        conn.commit()
-
-def main (): 
-    city=input("Enter search criteria ex)city ")
-    database(city)
-
-
-if __name__ == "__main__":
-    main()
