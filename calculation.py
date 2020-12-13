@@ -7,6 +7,7 @@ def setUpData(db_name):
     cur = conn.cursor()
     return cur, conn
 
+
 # finding the average
 def average(avgdict):
     avg_dict = {}
@@ -19,21 +20,25 @@ def calculate():
 
     # calculate rating average
     rating_dict={}
-    cur.execute("SELECT restaurants_names.name, yelp_restaurants_info.restaurant_id , zomato_restaurants_info.restaurant_id, google_restaurants_info.restaurant_id, yelp_restaurants_info.rating, zomato_restaurants_info.rating , google_restaurants_info.rating\
+    cur.execute("SELECT restaurants_names.name, yelp_restaurants_info.restaurant_id , zomato_restaurants_info.restaurant_id,\
+                google_restaurants_info.restaurant_id, yelp_restaurants_info.rating, zomato_restaurants_info.rating , google_restaurants_info.rating\
                 FROM yelp_restaurants_info, zomato_restaurants_info, google_restaurants_info\
                 JOIN restaurants_names ON yelp_restaurants_info.restaurant_id=restaurants_names.id\
-                WHERE yelp_restaurants_info.restaurant_id=zomato_restaurants_info.restaurant_id AND yelp_restaurants_info.restaurant_id=google_restaurants_info.restaurant_id AND yelp_restaurants_info.rating>0 AND zomato_restaurants_info.rating>0 AND google_restaurants_info.rating>0")
+                WHERE yelp_restaurants_info.restaurant_id=zomato_restaurants_info.restaurant_id AND yelp_restaurants_info.restaurant_id=google_restaurants_info.restaurant_id\
+                AND yelp_restaurants_info.rating>0 AND zomato_restaurants_info.rating>0 AND google_restaurants_info.rating>0")
 
     for row in cur:
         rating_dict[row[0]] = [row[4], row[5], row[6]]
     avg_rating_dict = average(rating_dict)
     
-    # calculate prive average
+    # calculate price average
     price_dict={}
-    cur.execute("SELECT restaurants_names.name, yelp_restaurants_info.restaurant_id , zomato_restaurants_info.restaurant_id, google_restaurants_info.restaurant_id, yelp_restaurants_info.price_range, zomato_restaurants_info.price_range , google_restaurants_info.price\
+    cur.execute("SELECT restaurants_names.name, yelp_restaurants_info.restaurant_id , zomato_restaurants_info.restaurant_id,\
+                google_restaurants_info.restaurant_id, yelp_restaurants_info.price_range, zomato_restaurants_info.price_range , google_restaurants_info.price\
                 FROM yelp_restaurants_info, zomato_restaurants_info, google_restaurants_info\
                 JOIN restaurants_names ON yelp_restaurants_info.restaurant_id=restaurants_names.id\
-                WHERE yelp_restaurants_info.restaurant_id=zomato_restaurants_info.restaurant_id AND yelp_restaurants_info.restaurant_id=google_restaurants_info.restaurant_id AND yelp_restaurants_info.price_range>0 AND zomato_restaurants_info.price_range>0 AND google_restaurants_info.price>0")
+                WHERE yelp_restaurants_info.restaurant_id=zomato_restaurants_info.restaurant_id AND yelp_restaurants_info.restaurant_id=google_restaurants_info.restaurant_id\
+                AND yelp_restaurants_info.price_range>0 AND zomato_restaurants_info.price_range>0 AND google_restaurants_info.price>0")
 
     for row in cur:
         price_dict[row[0]] = [row[4], row[5], row[6]]
@@ -41,7 +46,7 @@ def calculate():
     
     conn.commit()
 
-    # format avg_rating_dict and avg_price_dict into one dictionary
+    # formating avg_rating_dict and avg_price_dict into one dictionary
     name_r_p_dict = {}
     for key in avg_price_dict:
         if key in avg_rating_dict.keys():
@@ -62,16 +67,22 @@ def find_ratio():
     final_dict=sorted(ratio_dict.items(),key=lambda x:x[1], reverse=True)
     return final_dict
 
-def write_txt(dictionaries):
+def write_txt(filename,dictionaries):
     # writing out the calculated data to a file as text
-    string=str(dictionaries)
-    f=open("calculation_result","w")
-    f.write(string)
-    f.close()
+    f=open(filename,"w")
+    if type(dictionaries) is list:
+        for i in dictionaries:
+            f.write("%s, %s\n" %(i[0], str(i[1])))
+        f.close()
+    else:
+        for key in dictionaries:
+            f.write("%s, %s, %s\n" %(key, str(dictionaries[key][0]), str(dictionaries[key][1])))
+        f.close()
+            
 
 def main():
-    print(find_ratio())
-    write_txt(find_ratio())
+    write_txt("calculation_avgs", calculate())
+    write_txt("calculation_ratio", find_ratio())
 
 if __name__ == "__main__":
 	main()
