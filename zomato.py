@@ -5,7 +5,7 @@ import os
 
 restaurants_name=[]
 rating_reviews=[]
-api_key = "api_key"
+api_key = "d6c597785fed953a02eba404f366d0bf"
 
 def setUpData(db_name):
     path = os.path.dirname(os.path.abspath(__file__))
@@ -50,22 +50,18 @@ def getZomatoInfo(api_key, location, restaurants_name, rating_reviews):
 def database(rating_reviews):
     
     cur, conn = setUpData("restaurants.db")
-
     # create a table zomato_restaurants_info
-    cur.execute("DROP TABLE IF EXISTS zomato_restaurants_info")
-    cur.execute("CREATE TABLE zomato_restaurants_info (restaurant_id INTEGER PRIMARY KEY, name TEXT, rating FLOAT, reviews_count INTEGER, price_range INTEGER)")
+    cur.execute("CREATE TABLE IF NOT EXISTS zomato_restaurants_info (restaurant_id INTEGER PRIMARY KEY, name TEXT, rating FLOAT, reviews_count INTEGER, price_range INTEGER)")
+
+    count = 0
     for i in rating_reviews:
+        if count == 25:
+            break
         # get restaurant_id from yelp_restaurants_names
-        cur.execute("SELECT restaurants_names.id FROM restaurants_names WHERE name=?", (i[0],) )
-        restaurant_id = cur.fetchone()
-        cur.execute("INSERT INTO zomato_restaurants_info (restaurant_id, name, rating, reviews_count, price_range) VALUES (?,?,?,?,?)",(restaurant_id[0], i[0], i[1], i[2], i[3]))
+        cur.execute("SELECT name FROM zomato_restaurants_info WHERE name = ?", (i[0], ))
+        if len(cur.fetchall()) == 0:
+            cur.execute("SELECT restaurants_names.id FROM restaurants_names WHERE name=?", (i[0],) )
+            restaurant_id = cur.fetchone()
+            cur.execute("INSERT OR IGNORE INTO zomato_restaurants_info (restaurant_id, name, rating, reviews_count, price_range) VALUES (?,?,?,?,?)", (restaurant_id[0], i[0], i[1], i[2], i[3]))
+            count += 1
     conn.commit()
-
-
-def main():
-    data = getZomatoInfo(api_key, "ann-arbor", restaurants_name, rating_reviews)
-    database(data)
-
-
-if __name__ == "__main__":
-	main()
